@@ -1,4 +1,27 @@
 # Preprocessing: Peak Cleaning and Artifact Removal
+## 0. Extract peak sequences
+
+`00_generate_peak_sequences.py` extracts DNA sequences corresponding to genomic regions in a `.narrowPeak` file using the TAIR10 reference genome.
+
+The script:
+
+1. Reads the reference genome supplied with `-g`.
+2. Stores chromosome sequences in memory.
+3. Reads genomic peak coordinates from a `.narrowPeak` file supplied with `-p`.
+4. Extracts the corresponding DNA sequence for each peak.
+5. Writes the sequences to a FASTA file based on the input peak filename.
+
+### Usage
+
+```bash
+python 00_generate_peak_sequences.py \
+    -g /path/to/TAIR10_nuclear.fas \
+    -p /path/to/chr1-5_GEM_events.narrowPeak
+```
+
+The output FASTA file is created in the current working directory using the input peak filename.
+
+In the original workflow, this script was run across the TF peak datasets and the generated FASTA files were organized by TF.
 
 This directory contains the scripts used for the initial preprocessing of transcription factor (TF) peak datasets.
 
