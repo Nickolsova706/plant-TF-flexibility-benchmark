@@ -2,16 +2,16 @@
 # ====================================================================
 # 02_remove_artifacts.sh
 #
-# Removes regions listed in the global artifact blacklist from
-# every per-TF narrowPeak file.
+# Removes artifact regions from every per-TF narrowPeak file.
+#
+# SRS7 and TRP2 contain invalid negative genomic start coordinates.
+# For these two TFs, negative-start records are removed before
+# artifact subtraction, matching the original preprocessing workflow.
 #
 # Produces *_clean.narrowPeak files alongside the originals.
 #
 # Usage:
 #   ./02_remove_artifacts.sh <peak_base_dir> <artifact_bed>
-#
-# Example:
-#   ./02_remove_artifacts.sh ./00_peak_files ./global_artifacts.bed
 # ====================================================================
 
 set -euo pipefail
@@ -19,18 +19,10 @@ set -euo pipefail
 PEAK_BASE_DIR="${1:-./00_peak_files}"
 ARTIFACTS="${2:-./global_artifacts.bed}"
 
-# --------------------------------------------------------------------
-# Check required program
-# --------------------------------------------------------------------
-
 command -v bedtools >/dev/null 2>&1 || {
     echo "ERROR: bedtools is not installed or not in PATH."
     exit 1
 }
-
-# --------------------------------------------------------------------
-# Check input files
-# --------------------------------------------------------------------
 
 if [[ ! -d "$PEAK_BASE_DIR" ]]; then
     echo "ERROR: Peak directory not found: $PEAK_BASE_DIR"
@@ -48,10 +40,6 @@ echo "Peak directory : $PEAK_BASE_DIR"
 echo "Artifact BED   : $ARTIFACTS"
 echo "=============================================="
 
-# --------------------------------------------------------------------
-# Clean each narrowPeak file
-# --------------------------------------------------------------------
-
 find "$PEAK_BASE_DIR" -type f -name "*.narrowPeak" -print0 |
 while IFS= read -r -d '' peak_file; do
 
@@ -60,11 +48,32 @@ while IFS= read -r -d '' peak_file; do
 
     output_file="${peak_file%.narrowPeak}_clean.narrowPeak"
 
-    bedtools intersect \
-        -v \
-        -a "$peak_file" \
-        -b "$ARTIFACTS" \
-        > "$output_file"
+    # --------------------------------------------------------------
+    # SRS7 and TRP2 correction
+    # --------------------------------------------------------------
+    if [[ "$peak_file" == *"/SRS7_colamp_a/"* ||
+          "$peak_file" == *"/TRP2_colamp_a/"* ]]; then
+
+        echo "Special coordinate correction: $(basename "$(dirname "$(dirname "$peak_file")")")"
+
+        awk '$2 >= 0' "$peak_file" |
+            bedtools intersect -v \
+                -a stdin \
+                -b "$ARTIFACTS" \
+                > "$output_file"
+
+    else
+
+        # ----------------------------------------------------------
+        # Standard artifact removal for all other TFs
+        # ----------------------------------------------------------
+        bedtools intersect \
+            -v \
+            -a "$peak_file" \
+            -b "$ARTIFACTS" \
+            > "$output_file"
+
+    fi
 
     echo "Cleaned: $(basename "$peak_file")"
 
