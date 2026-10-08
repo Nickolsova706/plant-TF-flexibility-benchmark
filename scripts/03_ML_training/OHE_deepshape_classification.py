@@ -71,9 +71,17 @@ import shap
 warnings.filterwarnings("ignore", category=FutureWarning)
 
 # --- 1. SETTINGS ---
-FASTA_BASE = "/NASpool/anwesha2026/input_TF_seq_fasta"
-FIMO_BASE  = "/NASpool/anwesha2026/input_fimo_results"
-OUTPUT_DIR = "/NASpool/anwesha2026/OHE_deepshape_classification_output"
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+
+FASTA_BASE = os.environ.get("TF_FASTA_BASE")
+FIMO_BASE  = os.environ.get("TF_FIMO_BASE")
+OUTPUT_DIR = os.environ.get("OHE_DEEPSHAPE_CLASSIFICATION_OUTPUT", os.path.join(PROJECT_ROOT, "results", "OHE_deepshape_classification"))
+
+# Required external input paths
+if not FASTA_BASE:
+    raise RuntimeError("Set TF_FASTA_BASE to the location of the input FASTA directory.")
+if not FIMO_BASE:
+    raise RuntimeError("Set TF_FIMO_BASE to the location of the FIMO results directory.")
 SEQ_LEN    = 100
 
 # Parallelism: 6 workers × 12 inner = 72 threads (RF training)

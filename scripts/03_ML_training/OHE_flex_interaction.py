@@ -95,15 +95,25 @@ MAX_WORKERS   = 10     # Phase 1: 6 workers (bump to 10 after big TFs done)
 RF_INNER_JOBS = 10    # RF GridSearchCV inner parallelism (6 × 12 = 72 threads)
 
 # --- Paths ---
-FASTA_BASE = "/NASpool/anwesha2026/input_TF_seq_fasta"
-FIMO_BASE  = "/NASpool/anwesha2026/input_fimo_results"
-OUTPUT_DIR = "/NASpool/anwesha2026/OHE_flex_nbrprod_output"
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+
+FASTA_BASE = os.environ.get("TF_FASTA_BASE")
+FIMO_BASE  = os.environ.get("TF_FIMO_BASE")
+OUTPUT_DIR = os.environ.get("OHE_FLEX_INTERACTION_OUTPUT", os.path.join(PROJECT_ROOT, "results", "OHE_flex_nbrprod"))
 SEQ_LEN    = 100
 
 # --- DNAflexpy YAML lookup ---
 # Override DNAflexpy's default YAML loader with absolute path to avoid
 # importlib-resource errors when forked by multiprocessing workers.
-YAML_PATH = "/NASpool/anwesha2026/DNAflexpy/DNAflexpy/data/lookupNEW.yaml"
+YAML_PATH = os.environ.get("DNAFLEXPY_YAML")
+
+# Required external input paths
+if not FASTA_BASE:
+    raise RuntimeError("Set TF_FASTA_BASE to the location of the input FASTA directory.")
+if not FIMO_BASE:
+    raise RuntimeError("Set TF_FIMO_BASE to the location of the FIMO results directory.")
+if not YAML_PATH:
+    raise RuntimeError("Set DNAFLEXPY_YAML to the location of the DNAflexpy lookupNEW.yaml file.")
 
 import DNAflexpy.core as df_core
 import DNAflexpy.utils as df_utils

@@ -57,9 +57,11 @@ import shap
 warnings.filterwarnings("ignore", category=FutureWarning)
 
 # --- 1. SETTINGS ---
-FASTA_BASE = "/NASpool/anwesha2026/input_TF_seq_fasta"
-FIMO_BASE  = "/NASpool/anwesha2026/input_fimo_results"
-OUTPUT_DIR = "/NASpool/anwesha2026/OHE_flexibility_classification_output"
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+
+FASTA_BASE = os.environ.get("TF_FASTA_BASE")
+FIMO_BASE  = os.environ.get("TF_FIMO_BASE")
+OUTPUT_DIR = os.environ.get("OHE_FLEXIBILITY_CLASSIFICATION_OUTPUT", os.path.join(PROJECT_ROOT, "results", "OHE_flexibility_classification"))
 SEQ_LEN    = 100
 
 # Parallelism: 8 workers × 12 inner = 96 threads (RF training)
@@ -70,7 +72,15 @@ FLEX_THREADS  = 2
 
 # DNAflexpy library fix — YAML lookup table path
 # Adjust this path if DNAflexpy is installed elsewhere
-DNAFLEXPY_YAML = "/NASpool/anwesha2026/DNAflexpy/DNAflexpy/data/lookupNEW.yaml"
+DNAFLEXPY_YAML = os.environ.get("DNAFLEXPY_YAML")
+
+# Required external input paths
+if not FASTA_BASE:
+    raise RuntimeError("Set TF_FASTA_BASE to the location of the input FASTA directory.")
+if not FIMO_BASE:
+    raise RuntimeError("Set TF_FIMO_BASE to the location of the FIMO results directory.")
+if not DNAFLEXPY_YAML:
+    raise RuntimeError("Set DNAFLEXPY_YAML to the location of the DNAflexpy lookupNEW.yaml file.")
 
 # 5 flexibility descriptors from Dey, Yella & Kumar (2026)
 FLEX_FEATURES = ["DNaseI", "NPP", "twistDisp", "trx", "stiffness"]
